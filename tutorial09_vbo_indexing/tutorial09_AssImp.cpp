@@ -71,8 +71,6 @@ int main( void )
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS); 
 
-	// Cull triangles which normal is not towards the camera
-	glEnable(GL_CULL_FACE);
 
 	// Create and compile our GLSL program from the shaders
 	GLuint programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
@@ -131,13 +129,67 @@ int main( void )
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
 	float step = 1.85f; // Adjust the step value as needed
+	float high = 1.0f; // Adjust the step value as needed
 
 	glm::vec3 modelPositions[4];
-	modelPositions[0] = glm::vec3(0, 0, 0);
-	modelPositions[1] = glm::vec3(step, 0, -step);
-	modelPositions[2] = glm::vec3(0, 0, -2*step);
-	modelPositions[3] = glm::vec3(-step, 0, -step);	
+	modelPositions[0] = glm::vec3(0, high, step);
+	modelPositions[1] = glm::vec3(step, high, 0);
+	modelPositions[2] = glm::vec3(0, high, -step);
+	modelPositions[3] = glm::vec3(-step, high, 0);	
 	float modelRotations[4] = { 0.0f, 90.0f, 180.0f, -90.0f };
+
+
+// Calculate the position and size of the green plane
+float greenPlaneSize = 6.0f; // Adjust the size as needed
+float greenPlaneYPosition = 0.0f; // Place it at the ground level
+
+// Define vertices, UVs, and normals for the green plane
+std::vector<glm::vec3> planeVertices = {
+    glm::vec3(-0.5f * greenPlaneSize, greenPlaneYPosition, -0.5f * greenPlaneSize),
+    glm::vec3(0.5f * greenPlaneSize, greenPlaneYPosition, -0.5f * greenPlaneSize),
+    glm::vec3(0.5f * greenPlaneSize, greenPlaneYPosition, 0.5f * greenPlaneSize),
+    
+    glm::vec3(-0.5f * greenPlaneSize, greenPlaneYPosition, -0.5f * greenPlaneSize),
+    glm::vec3(0.5f * greenPlaneSize, greenPlaneYPosition, 0.5f * greenPlaneSize),
+    glm::vec3(-0.5f * greenPlaneSize, greenPlaneYPosition, 0.5f * greenPlaneSize),
+};
+
+std::vector<glm::vec2> planeUVs = {
+    glm::vec2(0.0f, 0.0f),
+    glm::vec2(1.0f, 0.0f),
+    glm::vec2(1.0f, 1.0f),
+    
+    glm::vec2(0.0f, 0.0f),
+    glm::vec2(1.0f, 1.0f),
+    glm::vec2(0.0f, 1.0f),
+};
+
+std::vector<glm::vec3> planeNormals = {
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+};
+
+// Create buffer objects for the green plane
+GLuint planeVertexBuffer;
+glGenBuffers(1, &planeVertexBuffer);
+glBindBuffer(GL_ARRAY_BUFFER, planeVertexBuffer);
+glBufferData(GL_ARRAY_BUFFER, planeVertices.size() * sizeof(glm::vec3), &planeVertices[0], GL_STATIC_DRAW);
+
+GLuint planeUVBuffer;
+glGenBuffers(1, &planeUVBuffer);
+glBindBuffer(GL_ARRAY_BUFFER, planeUVBuffer);
+glBufferData(GL_ARRAY_BUFFER, planeUVs.size() * sizeof(glm::vec2), &planeUVs[0], GL_STATIC_DRAW);
+
+GLuint planeNormalBuffer;
+glGenBuffers(1, &planeNormalBuffer);
+glBindBuffer(GL_ARRAY_BUFFER, planeNormalBuffer);
+glBufferData(GL_ARRAY_BUFFER, planeNormals.size() * sizeof(glm::vec3), &planeNormals[0], GL_STATIC_DRAW);
+
 
 	do{
 
@@ -154,13 +206,46 @@ int main( void )
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Use our shader
+		// Use our shader        
+		glDisable(GL_CULL_FACE);
+
+
 		glUseProgram(programID);
-		for (int i = 0; i < 4; i++) {
-			// Compute the MVP matrix from keyboard and mouse input
 			computeMatricesFromInputs();
 			glm::mat4 ProjectionMatrix = getProjectionMatrix();
 			glm::mat4 ViewMatrix = getViewMatrix();
+
+	glm::mat4 planeModelMatrix = glm::mat4(1.0);
+    glm::mat4 planeMVP = ProjectionMatrix * ViewMatrix * planeModelMatrix;
+
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &planeMVP[0][0]);
+    glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &planeModelMatrix[0][0]);
+    glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+    // Set the green color (you may want to create a new shader for the green plane)
+    glUniform3f(LightID, 0.0f, 1.0f, 0.0f); // Set the light color to green
+
+    glEnableVertexAttribArray(vertexPosition_modelspaceID);
+    glEnableVertexAttribArray(vertexUVID);
+    glEnableVertexAttribArray(vertexNormal_modelspaceID);
+
+    glBindBuffer(GL_ARRAY_BUFFER, planeVertexBuffer);
+    glVertexAttribPointer(vertexPosition_modelspaceID, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, planeUVBuffer);
+    glVertexAttribPointer(vertexUVID, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, planeNormalBuffer);
+    glVertexAttribPointer(vertexNormal_modelspaceID, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+
+
+  glEnable(GL_CULL_FACE);
+
+		for (int i = 0; i < 4; i++) {
+			// Compute the MVP matrix from keyboard and mouse input
 			glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), modelPositions[i]);
         	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelRotations[i]), glm::vec3(0.0, 1.0, 0.0));
         	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
