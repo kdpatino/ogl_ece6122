@@ -41,21 +41,17 @@ void updateCameraVectors(glm::vec3& position, glm::vec3& target, glm::vec3& dire
 }
 
 void rotateCameraRadially(float angle, glm::vec3& position, glm::vec3& direction, glm::vec3& up, glm::vec3& target) {
-    glm::vec3 currentPosition = position;
-
-    // Calculate new position in spherical coordinates
-    float x = currentPosition.x * cos(angle);
-    float y = currentPosition.y * cos(angle) - currentPosition.z * sin(angle);
-    float z = currentPosition.x * sin(angle) + currentPosition.y * sin(angle) + currentPosition.z * cos(angle);
-
-    position = glm::vec3(x, y, z);
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::cross(direction, up));
+    direction = glm::mat3(rotationMatrix) * direction;
+    up = glm::mat3(rotationMatrix) * up;
+    position += up * angle;
 }
 
-void updateCameraPosition(float angle, glm::vec3& position, glm::vec3& direction) {
-    glm::vec3 currentPosition = position;
-    float x = currentPosition.x * cos(angle) - currentPosition.z * sin(angle);
-    float z = currentPosition.x * sin(angle) + currentPosition.z * cos(angle);
-    position = glm::vec3(x, currentPosition.y, z);
+void updateCameraPosition(float angle, glm::vec3& position, glm::vec3& direction, glm::vec3& up) {
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, up);
+    direction = glm::mat3(rotationMatrix) * direction;
+    glm::vec3 right = glm::cross(direction, up);
+    position += right * angle;
 }
 
 void moveCameraRadially(float distance, glm::vec3& position, glm::vec3& direction) {
@@ -73,28 +69,28 @@ void computeMatricesFromInputs(){
 	float deltaTime = float(currentTime - lastTime);
 
  	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		updateCameraPosition(0.01f, position, direction);
+		updateCameraPosition(0.01f, position, direction,up);
 
     }
  	
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		updateCameraPosition(-0.01f, position, direction);
+		updateCameraPosition(-0.01f, position, direction,up);
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        moveCameraRadially(-0.1f, position, direction); 
+        moveCameraRadially(-0.01f, position, direction); 
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        moveCameraRadially(0.1f, position, direction); 
+        moveCameraRadially(0.01f, position, direction); 
     }
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        rotateCameraRadially(0.01f, position, direction,up,target);  // Rotate radially upward
+        rotateCameraRadially(-0.01f, position, direction,up,target);  // Rotate radially upward
     }
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        rotateCameraRadially(-0.01f, position, direction,up,target);  // Rotate radially downward
+        rotateCameraRadially(0.01f, position, direction,up,target);  // Rotate radially downward
     }
 	updateCameraVectors(position,target,direction,up);
 	// Up vector
