@@ -181,10 +181,21 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, planeNormalBuffer);
     glBufferData(GL_ARRAY_BUFFER, planeNormals.size() * sizeof(glm::vec3), &planeNormals[0], GL_STATIC_DRAW);
 
+    bool lightEnabled = false;
+    static double lastToggleTime = 0.0;
+    const double toggleDelay = 0.2; // Adjust the delay as needed
     do
     {
+        GLuint lightEnabledID = glGetUniformLocation(programID, "lightEnabled");
+        glUniform1i(lightEnabledID, lightEnabled ? 1 : 0);
         // Measure speed
         double currentTime = glfwGetTime();
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && (currentTime - lastToggleTime) >= toggleDelay)
+        {
+            // Toggle the lighting state when the 'L' key is pressed after a delay
+            lightEnabled = !lightEnabled;
+            lastToggleTime = currentTime; // Update the last toggle time
+        }
         nbFrames++;
         if (currentTime - lastTime >= 1.0)
         { // If last prinf() was more than 1sec ago
