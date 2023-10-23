@@ -130,6 +130,14 @@ int main( void )
 	// For speed computation
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
+	float step = 1.85f; // Adjust the step value as needed
+
+	glm::vec3 modelPositions[4];
+	modelPositions[0] = glm::vec3(0, 0, 0);
+	modelPositions[1] = glm::vec3(step, 0, -step);
+	modelPositions[2] = glm::vec3(0, 0, -2*step);
+	modelPositions[3] = glm::vec3(-step, 0, -step);	
+	float modelRotations[4] = { 0.0f, 90.0f, 180.0f, -90.0f };
 
 	do{
 
@@ -148,80 +156,81 @@ int main( void )
 
 		// Use our shader
 		glUseProgram(programID);
+		for (int i = 0; i < 4; i++) {
+			// Compute the MVP matrix from keyboard and mouse input
+			computeMatricesFromInputs();
+			glm::mat4 ProjectionMatrix = getProjectionMatrix();
+			glm::mat4 ViewMatrix = getViewMatrix();
+			glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), modelPositions[i]);
+        	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelRotations[i]), glm::vec3(0.0, 1.0, 0.0));
+        	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-		// Compute the MVP matrix from keyboard and mouse input
-		computeMatricesFromInputs();
-		glm::mat4 ProjectionMatrix = getProjectionMatrix();
-		glm::mat4 ViewMatrix = getViewMatrix();
-		glm::mat4 ModelMatrix = glm::mat4(1.0);
-		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+			// Send our transformation to the currently bound shader, 
+			// in the "MVP" uniform
+			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+			glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+			glm::vec3 lightPos = glm::vec3(4,4,4);
+			glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
-		glm::vec3 lightPos = glm::vec3(4,4,4);
-		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+			// Bind our texture in Texture Unit 0
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, Texture);
+			// Set our "myTextureSampler" sampler to user Texture Unit 0
+			glUniform1i(TextureID, 0);
 
-		// Bind our texture in Texture Unit 0
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i(TextureID, 0);
+			// 1rst attribute buffer : vertices
+			glEnableVertexAttribArray(vertexPosition_modelspaceID);
+			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+			glVertexAttribPointer(
+				vertexPosition_modelspaceID, // attribute
+				3,                  // size
+				GL_FLOAT,           // type
+				GL_FALSE,           // normalized?
+				0,                  // stride
+				(void*)0            // array buffer offset
+			);
 
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(vertexPosition_modelspaceID);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(
-			vertexPosition_modelspaceID, // attribute
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
-		);
+			// 2nd attribute buffer : UVs
+			glEnableVertexAttribArray(vertexUVID);
+			glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+			glVertexAttribPointer(
+				vertexUVID,                       // attribute
+				2,                                // size
+				GL_FLOAT,                         // type
+				GL_FALSE,                         // normalized?
+				0,                                // stride
+				(void*)0                          // array buffer offset
+			);
 
-		// 2nd attribute buffer : UVs
-		glEnableVertexAttribArray(vertexUVID);
-		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-		glVertexAttribPointer(
-			vertexUVID,                       // attribute
-			2,                                // size
-			GL_FLOAT,                         // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-		);
+			// 3rd attribute buffer : normals
+			glEnableVertexAttribArray(vertexNormal_modelspaceID);
+			glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+			glVertexAttribPointer(
+				vertexNormal_modelspaceID,        // attribute
+				3,                                // size
+				GL_FLOAT,                         // type
+				GL_FALSE,                         // normalized?
+				0,                                // stride
+				(void*)0                          // array buffer offset
+			);
 
-		// 3rd attribute buffer : normals
-		glEnableVertexAttribArray(vertexNormal_modelspaceID);
-		glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-		glVertexAttribPointer(
-			vertexNormal_modelspaceID,        // attribute
-			3,                                // size
-			GL_FLOAT,                         // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-		);
+			// Index buffer
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 
-		// Index buffer
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+			// Draw the triangles !
+			glDrawElements(
+				GL_TRIANGLES,      // mode
+				indices.size(),    // count
+				GL_UNSIGNED_SHORT,   // type
+				(void*)0           // element array buffer offset
+			);
 
-		// Draw the triangles !
-		glDrawElements(
-			GL_TRIANGLES,      // mode
-			indices.size(),    // count
-			GL_UNSIGNED_SHORT,   // type
-			(void*)0           // element array buffer offset
-		);
-
-		glDisableVertexAttribArray(vertexPosition_modelspaceID);
-		glDisableVertexAttribArray(vertexUVID);
-		glDisableVertexAttribArray(vertexNormal_modelspaceID);
-
+			glDisableVertexAttribArray(vertexPosition_modelspaceID);
+			glDisableVertexAttribArray(vertexUVID);
+			glDisableVertexAttribArray(vertexNormal_modelspaceID);
+		}
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
