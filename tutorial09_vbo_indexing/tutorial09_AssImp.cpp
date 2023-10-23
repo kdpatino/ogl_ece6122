@@ -183,7 +183,6 @@ int main(void)
 
     do
     {
-
         // Measure speed
         double currentTime = glfwGetTime();
         nbFrames++;
