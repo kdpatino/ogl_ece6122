@@ -87,10 +87,12 @@ int main(void)
 
     // Load the texture
     GLuint Texture = loadDDS("uvmap.DDS");
+    GLuint TextureWolf = loadBMP_custom("uvtemplate.bmp");
 
     // Get a handle for our "myTextureSampler" uniform
     GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
-
+    GLuint TextureIDWolf = glGetUniformLocation(programID, "myTextureSamplerWolf");
+    
     // Read our .obj file
     std::vector<unsigned short> indices;
     std::vector<glm::vec3> indexed_vertices;
@@ -182,12 +184,19 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, planeNormals.size() * sizeof(glm::vec3), &planeNormals[0], GL_STATIC_DRAW);
 
     bool lightEnabled = false;
+    bool textureControl = true;
     static double lastToggleTime = 0.0;
     const double toggleDelay = 0.2; // Adjust the delay as needed
     do
     {
+        textureControl = true;
         GLuint lightEnabledID = glGetUniformLocation(programID, "lightEnabled");
         glUniform1i(lightEnabledID, lightEnabled ? 1 : 0);
+        
+        GLuint textureControlID = glGetUniformLocation(programID, "textureControl");
+        glUniform1i(textureControlID, textureControl ? 1 : 0);
+        
+
         // Measure speed
         double currentTime = glfwGetTime();
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && (currentTime - lastToggleTime) >= toggleDelay)
@@ -216,12 +225,17 @@ int main(void)
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
 
+        textureControl = false;
+        glUniform1i(textureControlID, textureControl ? 1 : 0);
         glm::mat4 planeModelMatrix = glm::mat4(1.0);
         glm::mat4 planeMVP = ProjectionMatrix * ViewMatrix * planeModelMatrix;
 
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &planeMVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &planeModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, TextureWolf);
+        glUniform1i(TextureIDWolf, 1);
 
         // Set the green color (you may want to create a new shader for the green plane)
         glUniform3f(LightID, 0.0f, 1.0f, 0.0f); // Set the light color to green
@@ -244,6 +258,8 @@ int main(void)
 
         glEnable(GL_CULL_FACE);
 
+        textureControl = true;
+        glUniform1i(textureControlID, textureControl ? 1 : 0);
         for (int i = 0; i < 4; i++)
         {
             // Compute the MVP matrix from keyboard and mouse input

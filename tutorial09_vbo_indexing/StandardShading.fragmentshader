@@ -9,9 +9,11 @@ varying vec3 LightDirection_cameraspace;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
+uniform sampler2D myTextureSamplerWolf;
 uniform mat4 MV;
 uniform vec3 LightPosition_worldspace;
 uniform int lightEnabled;
+uniform int textureControl;
 
 void main()
 {
@@ -21,8 +23,15 @@ void main()
     vec3 LightColor = vec3(1, 1, 1);
     float LightPower = 50.0f;
 
+    vec3 MaterialDiffuseColor;
     // Material properties
-    vec3 MaterialDiffuseColor = texture2D(myTextureSampler, UV).rgb;
+    if(textureControl == 1){
+        MaterialDiffuseColor = texture2D(myTextureSampler, UV).rgb;
+
+    } else {
+        MaterialDiffuseColor = texture2D(myTextureSamplerWolf, UV).rgb;
+
+    }
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     vec3 MaterialSpecularColor = vec3(0.3, 0.3, 0.3);
 
