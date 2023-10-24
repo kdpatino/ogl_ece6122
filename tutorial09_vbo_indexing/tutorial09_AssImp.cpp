@@ -1,3 +1,10 @@
+/*
+  Author: Kevin D Patino Sosa
+  Class: ECE6122-A
+  Last Date Modified: 10/10/2023
+  Description: Lab2
+*/
+
 // Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,14 +92,14 @@ int main(void)
     GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
     GLuint vertexNormal_modelspaceID = glGetAttribLocation(programID, "vertexNormal_modelspace");
 
-    // Load the texture
+    // Load the textures
     GLuint Texture = loadDDS("uvmap.DDS");
     GLuint TextureWolf = loadBMP_custom("uvtemplate.bmp");
 
     // Get a handle for our "myTextureSampler" uniform
     GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
     GLuint TextureIDWolf = glGetUniformLocation(programID, "myTextureSamplerWolf");
-    
+
     // Read our .obj file
     std::vector<unsigned short> indices;
     std::vector<glm::vec3> indexed_vertices;
@@ -192,10 +199,9 @@ int main(void)
         textureControl = true;
         GLuint lightEnabledID = glGetUniformLocation(programID, "lightEnabled");
         glUniform1i(lightEnabledID, lightEnabled ? 1 : 0);
-        
+
         GLuint textureControlID = glGetUniformLocation(programID, "textureControl");
         glUniform1i(textureControlID, textureControl ? 1 : 0);
-        
 
         // Measure speed
         double currentTime = glfwGetTime();

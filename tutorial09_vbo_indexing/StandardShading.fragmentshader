@@ -1,5 +1,12 @@
 #version 120
 
+/*
+  Author: Kevin D Patino Sosa
+  Class: ECE6122-A
+  Last Date Modified: 10/10/2023
+  Description: Lab2
+*/
+
 // Interpolated values from the vertex shaders
 varying vec2 UV;
 varying vec3 Position_worldspace;
@@ -25,12 +32,13 @@ void main()
 
     vec3 MaterialDiffuseColor;
     // Material properties
-    if(textureControl == 1){
+    if (textureControl == 1)
+    {
         MaterialDiffuseColor = texture2D(myTextureSampler, UV).rgb;
-
-    } else {
+    }
+    else
+    {
         MaterialDiffuseColor = texture2D(myTextureSamplerWolf, UV).rgb;
-
     }
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     vec3 MaterialSpecularColor = vec3(0.3, 0.3, 0.3);
