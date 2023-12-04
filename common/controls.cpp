@@ -94,8 +94,8 @@ void rotateCameraRadially(float angle, glm::vec3 &position, glm::vec3 &direction
  */
 void updateCameraPosition(float angle, glm::vec3 &position, glm::vec3 &direction, glm::vec3 &up)
 {
-    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, up);
-    direction = glm::mat3(rotationMatrix) * direction;
+    //glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, up);
+    //direction = glm::mat3(rotationMatrix) * direction;
     glm::vec3 right = glm::cross(direction, up);
     position += right * angle;
 }
@@ -125,34 +125,34 @@ void computeMatricesFromInputs()
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - lastTime);
 
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
-        updateCameraPosition(0.01f, position, direction, up);
+        updateCameraPosition(0.05f, position, direction, up);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
-        updateCameraPosition(-0.01f, position, direction, up);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        moveCameraRadially(-0.01f, position, direction);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        moveCameraRadially(0.01f, position, direction);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        rotateCameraRadially(-0.01f, position, direction, up, target); // Rotate radially upward
+        updateCameraPosition(-0.05f, position, direction, up);
     }
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        rotateCameraRadially(0.01f, position, direction, up, target); // Rotate radially downward
+        moveCameraRadially(-0.05f, position, direction);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        moveCameraRadially(0.05f, position, direction);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        rotateCameraRadially(-0.05f, position, direction, up, target); // Rotate radially upward
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+    {
+        rotateCameraRadially(0.05f, position, direction, up, target); // Rotate radially downward
     }
     updateCameraVectors(position, target, direction, up);
     // Up vector

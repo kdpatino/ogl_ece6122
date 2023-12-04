@@ -148,7 +148,7 @@ int main(void)
     float modelRotations[4] = {0.0f, 90.0f, 180.0f, -90.0f};
 
     // Calculate the position and size of the green plane
-    float greenPlaneSize = 6.0f;      // Adjust the size as needed
+    float greenPlaneSize = 16.0f;      // Adjust the size as needed
     float greenPlaneYPosition = 0.0f; // Place it at the ground level
 
     // Define vertices, UVs, and normals for the green plane
