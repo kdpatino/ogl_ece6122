@@ -22,6 +22,8 @@ GLFWwindow *window;
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 using namespace glm;
 
 #include <common/controls.hpp>
@@ -151,8 +153,6 @@ int main(void)
                                      RenderObject(glm::vec3(0, -step, high), objRadius, boxMin, boxMax),
                                      RenderObject(glm::vec3(-step, 0, high), objRadius, boxMin, boxMax)};
 
-    float modelRotations[4] = {0.0f, 90.0f, 180.0f, -90.0f};
-
     float move_step = 0.05f;
 
     // Calculate the position and size of the green plane
@@ -198,12 +198,14 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, planeNormalBuffer);
     glBufferData(GL_ARRAY_BUFFER, planeNormals.size() * sizeof(glm::vec3), &planeNormals[0], GL_STATIC_DRAW);
 
-    bool lightEnabled = false;
+    bool lightEnabled = true;
     bool textureControl = true;
     static double lastToggleTime = 0.0;
     const double toggleDelay = 0.2; // Adjust the delay as needed
 
     bool init_move_flag = false;
+    double elapsedTime = 0.0;
+
     do
     {
         textureControl = true;
@@ -214,21 +216,26 @@ int main(void)
         glUniform1i(textureControlID, textureControl ? 1 : 0);
         // Measure speed
         double currentTime = glfwGetTime();
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && (currentTime - lastToggleTime) >= toggleDelay)
-        {
-            // Toggle the lighting state when the 'L' key is pressed after a delay
-            lightEnabled = !lightEnabled;
-            lastToggleTime = currentTime; // Update the last toggle time
-        }
+
         nbFrames++;
-        if (currentTime - lastTime >= 1.0)
+        double deltaTime = currentTime - lastTime;
+        if (deltaTime >= 1.0)
         { // If last prinf() was more than 1sec ago
             // printf and reset
             printf("%f ms/frame\n", 1000.0 / double(nbFrames));
             nbFrames = 0;
             lastTime += 1.0;
         }
+        elapsedTime += deltaTime; // Accumulate elapsed time
 
+        // Pass the elapsed time to the shader
+        GLuint timeLocation = glGetUniformLocation(programID, "u_time");
+        glUniform1f(timeLocation, static_cast<float>(elapsedTime));
+
+        glm::vec3 internalLightColor(1.0f, 0, 1.0f);  // You can set the initial color
+
+        GLuint internalLightColorLocation = glGetUniformLocation(programID, "InternalLightColor");
+        glUniform3fv(internalLightColorLocation, 1, glm::value_ptr(internalLightColor));
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -257,9 +264,6 @@ int main(void)
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, TextureWolf);
         glUniform1i(TextureIDWolf, 1);
-
-        // Set the green color (you may want to create a new shader for the green plane)
-        glUniform3f(LightID, 0.0f, 1.0f, 0.0f); // Set the light color to green
 
         glEnableVertexAttribArray(vertexPosition_modelspaceID);
         glEnableVertexAttribArray(vertexUVID);
@@ -331,10 +335,13 @@ int main(void)
         for (int i = 0; i < 4; i++)
         {
             // Compute the MVP matrix from keyboard and mouse input
-            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), renderObjects[i].getFixPosition());
+            glm::vec3 modelPosition = renderObjects[i].getFixPosition();
+            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), modelPosition);
             ModelMatrix = glm::rotate(ModelMatrix, glm::radians(renderObjects[i].getRotationAngle()),
                                       renderObjects[i].getRotationVector());
             glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+            GLuint LightPositionID = glGetUniformLocation(programID, "LightPosition_cameraspace");
+            glUniform3f(LightPositionID, modelPosition.x,modelPosition.y , modelPosition.z);
 
             // Send our transformation to the currently bound shader,
             // in the "MVP" uniform
@@ -342,7 +349,7 @@ int main(void)
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
             glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-            glm::vec3 lightPos = glm::vec3(4, 4, 4);
+            glm::vec3 lightPos = glm::vec3(0, 8, 0);
             glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
             // Bind our texture in Texture Unit 0
