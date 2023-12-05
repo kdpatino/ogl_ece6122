@@ -141,19 +141,19 @@ int main(void)
     // For speed computation
     double lastTime = glfwGetTime();
     int nbFrames = 0;
-    float step = 1.85f;                   // Adjust the step value as needed
-    float high = 1.0f;                    // Adjust the step value as needed
-    glm::vec3 boxMin(-8.0f, 0.0f, -1.0f); // Assuming -1.0f as the minimum z value for the box
-    glm::vec3 boxMax(8.0f, 16.0f, 1.0f);  // Assuming 1.0f as the maximum z value for the box
-
-    RenderObject renderObjects[4] = {RenderObject(glm::vec3(0, high, step), high, boxMin, boxMax),
-                                     RenderObject(glm::vec3(step, high, 0), high, boxMin, boxMax),
-                                     RenderObject(glm::vec3(0, high, -step), high, boxMin, boxMax),
-                                     RenderObject(glm::vec3(-step, high, 0), high, boxMin, boxMax)};
+    float step = 1.85f;
+    float high = 1.5f;                  
+    glm::vec3 boxMin(-8.0f, -8.0 , 0); // Assuming -1.0f as the minimum z value for the box
+    glm::vec3 boxMax(8.0f, 8.0f, 16.0f);  // Assuming 1.0f as the maximum z value for the box
+    float objRadius = 1.0f;
+    RenderObject renderObjects[4] = {RenderObject(glm::vec3(0, step,high), objRadius, boxMin, boxMax),
+                                     RenderObject(glm::vec3(step, 0,high), objRadius, boxMin, boxMax),
+                                     RenderObject(glm::vec3(0, -step, high), objRadius, boxMin, boxMax),
+                                     RenderObject(glm::vec3(-step,0, high), objRadius, boxMin, boxMax)};
 
     float modelRotations[4] = {0.0f, 90.0f, 180.0f, -90.0f};
 
-    float move_step = 0.001f;
+    float move_step = 0.05f;
 
     // Calculate the position and size of the green plane
     float greenPlaneSize = 16.0f;     // Adjust the size as needed
@@ -241,6 +241,7 @@ int main(void)
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
         {
             init_move_flag = true;
+            std::cout << "[INFO] Movement Activated" << std::endl;
         }
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
