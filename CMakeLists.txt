@@ -224,28 +224,42 @@ set_target_properties(tutorial09_vbo_indexing PROPERTIES XCODE_ATTRIBUTE_CONFIGU
 create_target_launcher(tutorial09_vbo_indexing WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/")
 
 # Tutorial 9 - AssImp model loading
+# Find OpenMP package
+find_package(OpenMP REQUIRED)
+
+# Tutorial 9 - AssImp model loading
 add_executable(tutorial09_AssImp
-	tutorial09_vbo_indexing/tutorial09_AssImp.cpp
-	common/shader.cpp
-	common/shader.hpp
-	common/controls.cpp
-	common/controls.hpp
-	common/texture.cpp
-	common/texture.hpp
-	common/objloader.cpp
-	common/objloader.hpp
-	
-	tutorial09_vbo_indexing/StandardShading.vertexshader
-	tutorial09_vbo_indexing/StandardShading.fragmentshader
+    tutorial09_vbo_indexing/tutorial09_AssImp.cpp
+    tutorial09_vbo_indexing/final_project.cpp
+    tutorial09_vbo_indexing/final_project.hpp
+    common/shader.cpp
+    common/shader.hpp
+    common/controls.cpp
+    common/controls.hpp
+    common/texture.cpp
+    common/texture.hpp
+    common/objloader.cpp
+    common/objloader.hpp
+
+    tutorial09_vbo_indexing/StandardShading.vertexshader
+    tutorial09_vbo_indexing/StandardShading.fragmentshader
 )
+
+# Link with OpenMP
 target_link_libraries(tutorial09_AssImp
-	${ALL_LIBS}
-	assimp
+    ${ALL_LIBS}
+    assimp
+    OpenMP::OpenMP_CXX
 )
+
 set_target_properties(tutorial09_AssImp PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
+
 # Xcode and Visual working directories
 set_target_properties(tutorial09_AssImp PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/")
 create_target_launcher(tutorial09_AssImp WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/")
+
+# Enable OpenMP compilation for this target
+target_compile_options(tutorial09_AssImp PRIVATE ${OpenMP_CXX_FLAGS})
 
 # Tutorial 9 - several objects
 add_executable(tutorial09_several_objects

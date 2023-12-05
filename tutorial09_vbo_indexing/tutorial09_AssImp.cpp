@@ -6,6 +6,8 @@
 */
 
 // Include standard headers
+#include <iostream> // Include the necessary header for std::cout
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -27,6 +29,8 @@ using namespace glm;
 #include <common/shader.hpp>
 #include <common/texture.hpp>
 #include <common/vboindexer.hpp>
+
+#include "final_project.hpp"
 
 int main(void)
 {
@@ -137,18 +141,22 @@ int main(void)
     // For speed computation
     double lastTime = glfwGetTime();
     int nbFrames = 0;
-    float step = 1.85f; // Adjust the step value as needed
-    float high = 1.0f;  // Adjust the step value as needed
+    float step = 1.85f;                   // Adjust the step value as needed
+    float high = 1.0f;                    // Adjust the step value as needed
+    glm::vec3 boxMin(-8.0f, 0.0f, -1.0f); // Assuming -1.0f as the minimum z value for the box
+    glm::vec3 boxMax(8.0f, 16.0f, 1.0f);  // Assuming 1.0f as the maximum z value for the box
 
-    glm::vec3 modelPositions[4];
-    modelPositions[0] = glm::vec3(0, high, step);
-    modelPositions[1] = glm::vec3(step, high, 0);
-    modelPositions[2] = glm::vec3(0, high, -step);
-    modelPositions[3] = glm::vec3(-step, high, 0);
+    RenderObject renderObjects[4] = {RenderObject(glm::vec3(0, high, step), high, boxMin, boxMax),
+                                     RenderObject(glm::vec3(step, high, 0), high, boxMin, boxMax),
+                                     RenderObject(glm::vec3(0, high, -step), high, boxMin, boxMax),
+                                     RenderObject(glm::vec3(-step, high, 0), high, boxMin, boxMax)};
+
     float modelRotations[4] = {0.0f, 90.0f, 180.0f, -90.0f};
 
+    float move_step = 0.001f;
+
     // Calculate the position and size of the green plane
-    float greenPlaneSize = 16.0f;      // Adjust the size as needed
+    float greenPlaneSize = 16.0f;     // Adjust the size as needed
     float greenPlaneYPosition = 0.0f; // Place it at the ground level
 
     // Define vertices, UVs, and normals for the green plane
@@ -194,6 +202,8 @@ int main(void)
     bool textureControl = true;
     static double lastToggleTime = 0.0;
     const double toggleDelay = 0.2; // Adjust the delay as needed
+
+    bool init_move_flag = false;
     do
     {
         textureControl = true;
@@ -202,7 +212,6 @@ int main(void)
 
         GLuint textureControlID = glGetUniformLocation(programID, "textureControl");
         glUniform1i(textureControlID, textureControl ? 1 : 0);
-
         // Measure speed
         double currentTime = glfwGetTime();
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && (currentTime - lastToggleTime) >= toggleDelay)
@@ -228,6 +237,11 @@ int main(void)
 
         glUseProgram(programID);
         computeMatricesFromInputs();
+
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+        {
+            init_move_flag = true;
+        }
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
 
@@ -266,10 +280,16 @@ int main(void)
 
         textureControl = true;
         glUniform1i(textureControlID, textureControl ? 1 : 0);
+
         for (int i = 0; i < 4; i++)
         {
+
+            if (init_move_flag)
+            {
+                renderObjects[i].moveRandomly(move_step);
+            }
             // Compute the MVP matrix from keyboard and mouse input
-            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), modelPositions[i]);
+            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), renderObjects[i].getPosition());
             ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelRotations[i]), glm::vec3(0.0, 1.0, 0.0));
             glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
