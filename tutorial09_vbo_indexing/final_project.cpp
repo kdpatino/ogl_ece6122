@@ -53,7 +53,7 @@ void RenderObject::moveRandomly(float step)
         movementDirection_ = glm::reflect(movementDirection_, normal);
         position_ += movementDirection_ * (step);
     }
-    rotationAngle_ += 5;
+    rotationAngle_ += 10;
     rotationAngle_ = fmod(rotationAngle_, 360.0f);
 
     // Adjust to the desired range (-180 to 180)
@@ -90,6 +90,14 @@ glm::vec3 RenderObject::getMovementDirection() const
 void RenderObject::setMovementDirection(const glm::vec3 &newDirection)
 {
     movementDirection_ = newDirection;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
+
+    glm::vec3 rotationVector(dis(gen), dis(gen), dis(gen));
+
+    // Normalize the vector to make it a unit vector
+    rotationVector_ = glm::normalize(rotationVector);
 }
 
 bool RenderObject::isPositionInsideBox(glm::vec3 &nextPosition)

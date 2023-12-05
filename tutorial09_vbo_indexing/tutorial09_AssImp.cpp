@@ -332,7 +332,8 @@ int main(void)
         {
             // Compute the MVP matrix from keyboard and mouse input
             glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), renderObjects[i].getFixPosition());
-            ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelRotations[i]), glm::vec3(0.0, 1.0, 0.0));
+            ModelMatrix = glm::rotate(ModelMatrix, glm::radians(renderObjects[i].getRotationAngle()),
+                                      renderObjects[i].getRotationVector());
             glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
             // Send our transformation to the currently bound shader,
