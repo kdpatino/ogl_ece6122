@@ -1,8 +1,8 @@
 /*
   Author: Kevin D Patino Sosa
   Class: ECE6122-A
-  Last Date Modified: 10/23/2023
-  Description: Lab3
+  Last Date Modified: 12/5/2023
+  Description: Final Project
 */
 
 // Include GLFW

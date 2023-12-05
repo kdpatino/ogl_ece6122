@@ -1,8 +1,8 @@
 /*
   Author: Kevin D Patino Sosa
   Class: ECE6122-A
-  Last Date Modified: 10/10/2023
-  Description: Lab2
+  Last Date Modified: 12/5/2023
+  Description: Final Project
 */
 
 // Include standard headers
@@ -70,12 +70,6 @@ int main(void)
 
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    // Hide the mouse and enable unlimited mouvement
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // Set the mouse at the center of the screen
-    glfwPollEvents();
-    glfwSetCursorPos(window, 1024 / 2, 768 / 2);
 
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -232,7 +226,7 @@ int main(void)
         GLuint timeLocation = glGetUniformLocation(programID, "u_time");
         glUniform1f(timeLocation, static_cast<float>(elapsedTime));
 
-        glm::vec3 internalLightColor(1.0f, 0, 1.0f);  // You can set the initial color
+        glm::vec3 internalLightColor(1.0f, 0, 1.0f); // You can set the initial color
 
         GLuint internalLightColorLocation = glGetUniformLocation(programID, "InternalLightColor");
         glUniform3fv(internalLightColorLocation, 1, glm::value_ptr(internalLightColor));
@@ -341,7 +335,7 @@ int main(void)
                                       renderObjects[i].getRotationVector());
             glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
             GLuint LightPositionID = glGetUniformLocation(programID, "LightPosition_cameraspace");
-            glUniform3f(LightPositionID, modelPosition.x,modelPosition.y , modelPosition.z);
+            glUniform3f(LightPositionID, modelPosition.x, modelPosition.y, modelPosition.z);
 
             // Send our transformation to the currently bound shader,
             // in the "MVP" uniform

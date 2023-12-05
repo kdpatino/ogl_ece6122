@@ -1,14 +1,26 @@
+/*
+  Author: Kevin D Patino Sosa
+  Class: ECE6122-A
+  Last Date Modified: 12/5/2023
+  Description: Final Project
+*/
+
 #pragma once
 
 #include <cstdlib>
 #include <ctime>
 #include <glm/glm.hpp>
+/**
+ * @brief Struct representing collision information between two RenderObjects.
+ */
 struct CollisionInfo
 {
     int object1Index;
     int object2Index;
 };
-
+/**
+ * @brief Class representing a renderable object with movement and collision properties.
+ */
 class RenderObject
 {
   public:
@@ -21,8 +33,8 @@ class RenderObject
     glm::vec3 getMovementDirection() const;
     bool isPositionInsideBox(glm::vec3 &nextPosition);
     glm::vec3 calculateCollisionNormal(const glm::vec3 &collisionPoint);
-    void handleCollision(RenderObject& otherObject);
-    void setMovementDirection(const glm::vec3& newDirection);
+    void handleCollision(RenderObject &otherObject);
+    void setMovementDirection(const glm::vec3 &newDirection);
     bool isCollidingWith(const RenderObject &otherObject) const;
 
   private:
