@@ -282,7 +282,7 @@ int main(void)
         textureControl = true;
         glUniform1i(textureControlID, textureControl ? 1 : 0);
 
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < 4; i++)
         {
 
@@ -294,7 +294,7 @@ int main(void)
 
         std::vector<CollisionInfo> collisions;
 
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < 4; i++)
         {
             // Check for collisions with other objects
@@ -302,7 +302,7 @@ int main(void)
             {
                 if (i != j && renderObjects[i].isCollidingWith(renderObjects[j]))
                 {
-                    #pragma omp critical
+#pragma omp critical
                     {
                         std::cout << "Collision between objects " << i << " and " << j << std::endl;
                         collisions.push_back({i, j});
