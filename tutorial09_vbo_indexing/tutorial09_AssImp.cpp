@@ -142,14 +142,14 @@ int main(void)
     double lastTime = glfwGetTime();
     int nbFrames = 0;
     float step = 1.85f;
-    float high = 1.5f;                  
-    glm::vec3 boxMin(-8.0f, -8.0 , 0); // Assuming -1.0f as the minimum z value for the box
-    glm::vec3 boxMax(8.0f, 8.0f, 16.0f);  // Assuming 1.0f as the maximum z value for the box
+    float high = 1.5f;
+    glm::vec3 boxMin(-8.0f, -8.0, 0);    // Assuming -1.0f as the minimum z value for the box
+    glm::vec3 boxMax(8.0f, 8.0f, 16.0f); // Assuming 1.0f as the maximum z value for the box
     float objRadius = 1.0f;
-    RenderObject renderObjects[4] = {RenderObject(glm::vec3(0, step,high), objRadius, boxMin, boxMax),
-                                     RenderObject(glm::vec3(step, 0,high), objRadius, boxMin, boxMax),
+    RenderObject renderObjects[4] = {RenderObject(glm::vec3(0, step, high), objRadius, boxMin, boxMax),
+                                     RenderObject(glm::vec3(step, 0, high), objRadius, boxMin, boxMax),
                                      RenderObject(glm::vec3(0, -step, high), objRadius, boxMin, boxMax),
-                                     RenderObject(glm::vec3(-step,0, high), objRadius, boxMin, boxMax)};
+                                     RenderObject(glm::vec3(-step, 0, high), objRadius, boxMin, boxMax)};
 
     float modelRotations[4] = {0.0f, 90.0f, 180.0f, -90.0f};
 
@@ -282,6 +282,7 @@ int main(void)
         textureControl = true;
         glUniform1i(textureControlID, textureControl ? 1 : 0);
 
+        #pragma omp parallel for
         for (int i = 0; i < 4; i++)
         {
 
@@ -289,8 +290,48 @@ int main(void)
             {
                 renderObjects[i].moveRandomly(move_step);
             }
+        }
+
+        std::vector<CollisionInfo> collisions;
+
+        #pragma omp parallel for
+        for (int i = 0; i < 4; i++)
+        {
+            // Check for collisions with other objects
+            for (int j = 0; j < 4; j++)
+            {
+                if (i != j && renderObjects[i].isCollidingWith(renderObjects[j]))
+                {
+                    #pragma omp critical
+                    {
+                        std::cout << "Collision between objects " << i << " and " << j << std::endl;
+                        collisions.push_back({i, j});
+                    }
+                }
+            }
+        }
+        // Mark objects to avoid handling the same collision twice
+        std::vector<bool> handled(4, false);
+
+        // Handle collisions outside the parallel region
+        for (const auto &collision : collisions)
+        {
+            if (!handled[collision.object1Index] && !handled[collision.object2Index])
+            {
+                std::cout << "Collision between objects " << collision.object1Index << " and " << collision.object2Index
+                          << std::endl;
+                renderObjects[collision.object1Index].handleCollision(renderObjects[collision.object2Index]);
+                renderObjects[collision.object2Index].handleCollision(renderObjects[collision.object1Index]);
+
+                handled[collision.object1Index] = true;
+                handled[collision.object2Index] = true;
+            }
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
             // Compute the MVP matrix from keyboard and mouse input
-            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), renderObjects[i].getPosition());
+            glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0), renderObjects[i].getFixPosition());
             ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelRotations[i]), glm::vec3(0.0, 1.0, 0.0));
             glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
